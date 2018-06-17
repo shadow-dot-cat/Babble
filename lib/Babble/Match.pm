@@ -8,23 +8,33 @@ ro 'top_rule';
 rwp 'text';
 lazy 'grammar_regexp' => sub { $PPR::X::GRAMMAR };
 
+lazy top_re => sub {
+  my ($self) = @_;
+  my $top = $self->_rule_to_re($self->top_rule);
+  return "\\A${top}\\Z";
+};
+
+sub _rule_to_re {
+  my $re = $_[1];
+  return $re unless ref($re);
+  return join '', map +(ref($_) ? $_->[1] : $_), @$re;
+}
+
 sub is_valid {
   my ($self) = @_;
-  return !!$self->text =~ /^${\$self->top_rule}$ ${\$self->grammar_regexp}/x;
+  return !!$self->text =~ /${\$self->top_re} ${\$self->grammar_regexp}/x;
 }
 
 sub match_positions_of {
   my ($self, $of) = @_;
-  my $name = "Perl${of}";
-  my $std_name = "PerlStd${of}";
   our @F;
   my $wrapped = qr{(?(DEFINE)
-    (?<${name}>((?&${std_name}))(?{ push @F, [ pos() - length($^N), length($^N) ] }))
+    (?<Perl${of}>((?&PerlStd${of}))(?{ push @F, [ pos() - length($^N), length($^N) ] }))
   ) ${\$self->grammar_regexp}}x;
   my @found = do {
     local @F;
     local $_ = $self->text;
-    /\A${\$self->top_rule}\Z ${wrapped}/x;
+    /${\$self->top_re} ${wrapped}/x;
     @F;
   };
   return @found;
