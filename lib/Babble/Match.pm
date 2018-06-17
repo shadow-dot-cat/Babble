@@ -19,7 +19,7 @@ sub match_positions_of {
   my $std_name = "PerlStd${of}";
   our @F;
   my $wrapped = qr{(?(DEFINE)
-    (?<${name}>((?&${std_name}))(?{ push @F, [ pos() - length($^N), pos() ] }))
+    (?<${name}>((?&${std_name}))(?{ push @F, [ pos() - length($^N), length($^N) ] }))
   ) ${\$self->grammar_regexp}}x;
   my @found = do {
     local @F;
@@ -27,7 +27,41 @@ sub match_positions_of {
     /\A${\$self->top_rule}\Z ${wrapped}/x;
     @F;
   };
-  return \@found;
+  return @found;
+}
+
+sub each_match_of {
+  my ($self, $of, $call) = @_;
+  my @found = $self->match_positions_of($of);
+  return unless @found;
+  require Babble::SubMatch;
+  while (my $f = shift @found) {
+    my $match = substr($self->text, $f->[0], $f->[1]);
+    my $obj = Babble::SubMatch->new(
+                top_rule => "(?&Perl${of})",
+                start => $f->[0],
+                text => $match,
+                parent => $self,
+              );
+    $call->($obj);
+    if (my $len_diff = length($obj->text) - $f->[1]) {
+      foreach my $later (@found) {
+        if ($later->[0] <= $f->[0]) {
+          $later->[1] += $len_diff;
+        } else {
+          $later->[0] += $len_diff;
+        }
+      }
+    }
+  }
+}
+
+sub replace_substring {
+  my ($self, $start, $length, $replace) = @_;
+  my $text = $self->text;
+  substr($text, $start, $length, $replace);
+  $self->_set_text($text);
+  return $self;
 }
 
 1;
