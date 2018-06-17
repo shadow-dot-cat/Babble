@@ -14,6 +14,36 @@ lazy top_re => sub {
   return "\\A${top}\\Z";
 };
 
+lazy submatches => sub {
+  my ($self) = @_;
+  return {} unless ref(my $top = $self->top_rule);
+  my (%subrules, @names);
+  my $re = join '', map {
+    ref($_)
+      ? do {
+          my ($name, $rule) = @$_;
+          push @names, $name;
+          $subrules{$name} = $rule;
+          "(${rule})"
+        }
+      : $_
+  } @$top;
+  return {} unless @names;
+  my @values = $self->text =~ /\A${re}\Z ${\$self->grammar_regexp}/x;
+  die "Match failed" unless @values;
+  my %submatches;
+  require Babble::SubMatch;
+  foreach my $idx (0 .. $#names) {
+    $submatches{$names[$idx]} = Babble::SubMatch->new(
+      top_rule => $subrules{$names[$idx]},
+      start => $-[$idx+1],
+      text => $values[$idx],
+      parent => $self,
+    );
+  }
+  return \%submatches;
+};
+
 sub _rule_to_re {
   my $re = $_[1];
   return $re unless ref($re);

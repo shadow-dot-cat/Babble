@@ -50,6 +50,24 @@ $test->each_match_within('SubroutineDeclaration' => [
 
 is($test->text, $new_text, 'each_match_within transform');
 
+$test->{text} = $old_text;
+
+$test->each_match_within('SubroutineDeclaration' => [
+  'sub(?&PerlOWS)',
+  [ name => '(?&PerlOldQualifiedIdentifier)' ], '(?&PerlOWS)',
+  '(?:(?&PerlParenthesesList)(?&PerlOWS))?+',
+  [ block => '(?&PerlBlock)' ],
+] => sub {
+  my ($match) = @_;
+  my $name = $match->submatches->{name}->text;
+  my $block = $match->submatches->{block};
+  my $text = $block->text;
+  $text =~ s/{/{ # define $name/;
+  $block->replace_text($text);
+});
+
+is($test->text, $new_text, 'each_match_within submatch transform');
+
 ok($test->is_valid, 'Still valid');
 
 done_testing;
