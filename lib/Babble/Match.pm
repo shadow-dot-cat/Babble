@@ -64,6 +64,24 @@ sub each_match_of {
       }
     }
   }
+  return $self;
+}
+
+sub each_match_within {
+  my ($self, $within, $rule, $call) = @_;
+  my $match_re = $self->_rule_to_re($rule);
+  my $extend_grammar = qq{
+    (?(DEFINE)
+      (?<PerlBabbleInnerMatch>(?<PerlStdBabbleInnerMatch> ${match_re}))
+      (?<Perl${within}> (?&PerlBabbleInnerMatch) | (?&PerlStd${within}))
+    )
+  };
+  local $self->{grammar_regexp} = join "\n", $extend_grammar, $self->grammar_regexp;
+  $self->each_match_of(BabbleInnerMatch => sub {
+    $_[0]->{top_rule} = $rule; # intentionally hacky, should go away (or rwp) later
+    $call->($_[0]);
+  });
+  return $self;
 }
 
 sub replace_substring {

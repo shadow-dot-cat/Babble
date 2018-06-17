@@ -21,6 +21,8 @@ ok($test->is_valid, 'Initial object valid');
 
 my $old_text = $test->text;
 
+(my $new_text = $old_text) =~ s/sub (\w+) {/sub $1 { # define $1/g;
+
 $test->each_match_of('SubroutineDeclaration' => sub {
   my ($match) = @_;
   my $text = $match->text;
@@ -29,9 +31,24 @@ $test->each_match_of('SubroutineDeclaration' => sub {
   $match->replace_text($text);
 });
 
-(my $new_text = $old_text) =~ s/sub (\w+) {/sub $1 { # define $1/g;
+is($test->text, $new_text, 'each_match_of transform');
 
-is($test->text, $new_text, 'Transform happened as expected');
+$test->{text} = $old_text;
+
+$test->each_match_within('SubroutineDeclaration' => [
+  'sub(?&PerlOWS)',
+  '(?&PerlOldQualifiedIdentifier)(?&PerlOWS)',
+  '(?:(?&PerlParenthesesList)(?&PerlOWS))?+',
+  '(?&PerlBlock)'
+] => sub {
+  my ($match) = @_;
+  my $text = $match->text;
+  my ($name) = $text =~ /\Asub (\w+)/;
+  $text =~ s/{/{ # define $name/;
+  $match->replace_text($text);
+});
+
+is($test->text, $new_text, 'each_match_within transform');
 
 ok($test->is_valid, 'Still valid');
 
