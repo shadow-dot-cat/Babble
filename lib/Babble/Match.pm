@@ -119,6 +119,11 @@ sub replace_substring {
   my $text = $self->text;
   substr($text, $start, $length, $replace);
   $self->_set_text($text);
+  foreach my $submatch (values %{$self->submatches}) {
+    if ($submatch->start > $start) {
+      $submatch->{start} += length($replace) - $length;
+    }
+  }
   return $self;
 }
 
