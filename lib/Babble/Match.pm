@@ -46,7 +46,7 @@ lazy submatches => sub {
 
 sub _rule_to_re {
   my $re = $_[1];
-  return $re unless ref($re);
+  return "(?&Perl${re})" unless ref($re);
   return join '', map +(ref($_) ? $_->[1] : $_), @$re;
 }
 

@@ -4,7 +4,7 @@ use Test::More;
 use Babble::Match;
 
 my $test = Babble::Match->new(
-  top_rule => '(?&PerlDocument)',
+  top_rule => 'Document',
   text => q{
     my $x = 1;
     sub foo {
@@ -21,7 +21,7 @@ ok($test->is_valid, 'Initial object valid');
 
 my $old_text = $test->text;
 
-(my $new_text = $old_text) =~ s/sub (\w+) {/sub $1 { # define $1/g;
+(my $new_text = $old_text) =~ s/sub (\w+) \{/sub $1 { # define $1/g;
 
 $test->each_match_of('SubroutineDeclaration' => sub {
   my ($match) = @_;
