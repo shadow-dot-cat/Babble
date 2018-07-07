@@ -17,25 +17,29 @@ lazy top_re => sub {
 lazy submatches => sub {
   my ($self) = @_;
   return {} unless ref(my $top = $self->top_rule);
-  my (%subrules, @names);
+  my @subrules;
   my $re = join '', map {
     ref($_)
       ? do {
+          push @subrules, $_;
           my ($name, $rule) = @$_;
-          push @names, $name;
-          $subrules{$name} = $rule;
           "(${rule})"
         }
       : $_
   } @$top;
-  return {} unless @names;
+  return {} unless @subrules;
   my @values = $self->text =~ /\A${re}\Z ${\$self->grammar_regexp}/x;
   die "Match failed" unless @values;
   my %submatches;
   require Babble::SubMatch;
-  foreach my $idx (0 .. $#names) {
-    $submatches{$names[$idx]} = Babble::SubMatch->new(
-      top_rule => $subrules{$names[$idx]},
+  foreach my $idx (0 .. $#subrules) {
+    # there may be more than one capture with the same name if there's an
+    # alternation in the rule, or one may be optional, so we skip if that
+    # part of the pattern failed to capture
+    next unless defined $values[$idx];
+    my ($name, $rule) = @{$subrules[$idx]};
+    $submatches{$name} = Babble::SubMatch->new(
+      top_rule => $rule,
       start => $-[$idx+1],
       text => $values[$idx],
       parent => $self,
@@ -78,7 +82,7 @@ sub each_match_of {
   while (my $f = shift @found) {
     my $match = substr($self->text, $f->[0], $f->[1]);
     my $obj = Babble::SubMatch->new(
-                top_rule => "(?&Perl${of})",
+                top_rule => $self->_rule_to_re($of),
                 start => $f->[0],
                 text => $match,
                 parent => $self,
