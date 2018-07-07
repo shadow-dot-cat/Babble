@@ -14,7 +14,7 @@ END
 
 my $cs = Babble::Plugin::CoreSignatures->new;
 
-foreach my $type (qw(plain)) {
+foreach my $type (qw(signatures oldsignatures plain)) {
   my $top = Babble::Match->new(top_rule => 'Document', text => $code);
   $cs->${\"transform_to_${type}"}($top);
   warn $top->text;

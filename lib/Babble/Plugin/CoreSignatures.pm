@@ -10,6 +10,30 @@ sub extend_grammar { } # PPR::X can already parse everything we need
 # .......bSSSSSSSaaaaa
 # sub foo ($baz) :Bar {
 
+sub transform_to_signatures {
+  my ($self, $top) = @_;
+  my $tf = sub {
+    my $s = (my $m = shift)->submatches;
+    if ((my $after = $s->{after}->text) =~ /\S/) {
+      $s->{after}->replace_text('');
+      $s->{before}->replace_text($s->{before}->text.$after);
+    }
+  };
+  $self->_transform_signatures($top, $tf);
+}
+
+sub transform_to_oldsignatures {
+  my ($self, $top) = @_;
+  my $tf = sub {
+    my $s = (my $m = shift)->submatches;
+    if ((my $before = $s->{before}->text) =~ /\S/) {
+      $s->{before}->replace_text('');
+      $s->{after}->replace_text($before.$s->{after}->text);
+    }
+  };
+  $self->_transform_signatures($top, $tf);
+}
+
 sub transform_to_plain {
   my ($self, $top) = @_;
   my $tf = sub {
@@ -40,7 +64,7 @@ sub _transform_signatures {
     @common,
   ], $tf);
   $top->each_match_within('AnonymousSubroutine' => [
-    'sub \b (?&PerlOWS)',
+    'sub \b',
     @common,
   ], $tf);
 }
