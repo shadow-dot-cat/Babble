@@ -12,6 +12,17 @@ sub extend_grammar { } # PPR::X can already parse everything we need
 
 sub transform_to_plain {
   my ($self, $top) = @_;
+  my $tf = sub {
+    my $s = (my $m = shift)->submatches;
+    s/^\s+//, s/\s+$// for my $sig_text = $s->{sig}->text;
+    $s->{body}->transform_text(sub { s/^{/{ my ${sig_text} = \@_; / });
+    $s->{sig}->replace_text('');
+  };
+  $self->_transform_signatures($top, $tf);
+}
+
+sub _transform_signatures {
+  my ($self, $top, $tf) = @_;
   $top->each_match_within('SubroutineDeclaration' => [
     'sub \b (?&PerlOWS) (?&PerlOldQualifiedIdentifier)',
     '(?:', # 5.20, 5.28+
@@ -24,12 +35,7 @@ sub transform_to_plain {
       [ after => '(?: (?>(?&PerlAttributes)) (?&PerlOWS) )?+' ],
     ')',
     [ body => '(?&PerlBlock)' ],
-  ] => sub {
-    my $s = (my $m = shift)->submatches;
-    s/^\s+//, s/\s+$// for my $sig_text = $s->{sig}->text;
-    $s->{body}->transform_text(sub { s/^{/{ my ${sig_text} = \@_; / });
-    $s->{sig}->replace_text('');
-  });
+  ], $tf);
 }
 
 1;
