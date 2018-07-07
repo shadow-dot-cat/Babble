@@ -4,8 +4,12 @@ use Babble::Plugin::CoreSignatures;
 use Babble::Match;
 
 my $code = <<'END';
-  sub left :Attr ($sig) { }
-  sub right ($sig) :Attr { }
+  sub left :Attr ($sig) {
+    my $anon_right = sub ($sig) :Attr { }
+  }
+  sub right ($sig) :Attr {
+    my $anon_left = sub :Attr ($sig) { }
+  }
 END
 
 my $cs = Babble::Plugin::CoreSignatures->new;

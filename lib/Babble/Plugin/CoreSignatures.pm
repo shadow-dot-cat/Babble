@@ -23,8 +23,7 @@ sub transform_to_plain {
 
 sub _transform_signatures {
   my ($self, $top, $tf) = @_;
-  $top->each_match_within('SubroutineDeclaration' => [
-    'sub \b (?&PerlOWS) (?&PerlOldQualifiedIdentifier)',
+  my @common = (
     '(?:', # 5.20, 5.28+
       [ before => '(?: (?&PerlOWS) (?>(?&PerlAttributes)) )?+' ],
       [ sig => '(?&PerlOWS) (?&PerlParenthesesList)' ], # not optional for us
@@ -35,6 +34,14 @@ sub _transform_signatures {
       [ after => '(?: (?>(?&PerlAttributes)) (?&PerlOWS) )?+' ],
     ')',
     [ body => '(?&PerlBlock)' ],
+  );
+  $top->each_match_within('SubroutineDeclaration' => [
+    'sub \b (?&PerlOWS) (?&PerlOldQualifiedIdentifier)',
+    @common,
+  ], $tf);
+  $top->each_match_within('AnonymousSubroutine' => [
+    'sub \b (?&PerlOWS)',
+    @common,
   ], $tf);
 }
 
