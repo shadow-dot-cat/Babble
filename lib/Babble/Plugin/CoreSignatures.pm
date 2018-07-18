@@ -38,9 +38,62 @@ sub transform_to_plain {
   my ($self, $top) = @_;
   my $tf = sub {
     my $s = (my $m = shift)->submatches;
-    s/^\s+//, s/\s+$// for my $sig_text = $s->{sig}->text;
-    $s->{body}->transform_text(sub { s/^{/{ my ${sig_text} = \@_; / });
-    $s->{sig}->replace_text('');
+    my $proto = '';
+    my $grammar = $m->grammar_regexp;
+    foreach my $try (@{$s}{qw(before after)}) {
+      local $try->{grammar_regexp} = qr{
+        (?(DEFINE)
+          (?<PerlAttributes>(?<PerlStdAttributes>
+            (?=:)(?&PerlAttribute)
+            (?&PerlAttribute)*
+          ))
+          (?<PerlAttribute>(?<PerlStdAttribute>
+            (?&PerlOWS) :? (?&PerlOWS)
+            (?&PerlIdentifier)
+            (?: (?= \( ) (?&PPR_X_quotelike_body) )?
+          ))
+        )
+        ${grammar}
+      }x;
+      my $each; $each = sub {
+        my ($attr) = @_;
+        if ($attr->text =~ /prototype(\(.*?\))/) {
+          $proto = $1;
+          $attr->replace_text('');
+          $each = sub {
+            my ($attr) = @_;
+            $attr->replace_text(s/^(\s*)/$1:/) unless $attr->text =~ /^\s*:/;
+            $each = sub {};
+          };
+        }
+      };
+      $try->each_match_of(Attribute => sub { $each->(@_) });
+      undef($each);
+    }
+
+    s/\A\s*\(//, s/\)\s*\Z// for my $sig_orig = $s->{sig}->text;
+    my @sig_parts = grep defined($_),
+                      $sig_orig =~ /((?>(?&PerlExpression))) ${grammar}/xg;
+
+    my (@sig_text, @defaults);
+
+    foreach my $idx (0..$#sig_parts) {
+      my $part = $sig_parts[$idx];
+      if ($part =~ s/^(\S+?)\s*=\s*(.*?)(,$|$)/$1$3/) {
+        push @defaults, "$1 = $2 if \@_ <= $idx";
+      }
+      push @sig_text, $part;
+    }
+
+    my $sig_text = join ' ', @sig_text;
+    $s->{body}->transform_text(sub { s/^{/{ my (${sig_text}) = \@_; / });
+    if ($proto) {
+      $s->{sig}->transform_text(sub {
+        s/\A(\s*)\(.*\)(\s*)\Z/${1}${proto}${2}/;
+      });
+    } else {
+      $s->{sig}->replace_text('');
+    }
   };
   $self->_transform_signatures($top, $tf);
 }

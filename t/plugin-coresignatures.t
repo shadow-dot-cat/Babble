@@ -7,7 +7,7 @@ my $code = <<'END';
   sub left :Attr ($sig) {
     my $anon_right = sub ($sig) :Attr { }
   }
-  sub right ($sig) :Attr {
+  sub right ($sig) :Attr :prototype($) {
     my $anon_left = sub :Attr ($sig) { }
   }
 END
@@ -17,7 +17,7 @@ my %expect = (
   sub left :Attr ($sig) {
     my $anon_right = sub :Attr ($sig) { }
   }
-  sub right :Attr ($sig) {
+  sub right :Attr :prototype($) ($sig) {
     my $anon_left = sub :Attr ($sig) { }
   }
 END
@@ -25,7 +25,7 @@ END
   sub left ($sig) :Attr {
     my $anon_right = sub ($sig) :Attr { }
   }
-  sub right ($sig) :Attr {
+  sub right ($sig) :Attr :prototype($) {
     my $anon_left = sub ($sig) :Attr { }
   }
 END
@@ -33,7 +33,7 @@ END
   sub left :Attr { my ($sig) = @_; 
     my $anon_right = sub :Attr { my ($sig) = @_;  }
   }
-  sub right :Attr { my ($sig) = @_; 
+  sub right ($) :Attr { my ($sig) = @_; 
     my $anon_left = sub :Attr { my ($sig) = @_;  }
   }
 END

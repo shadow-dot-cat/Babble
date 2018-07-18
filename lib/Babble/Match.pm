@@ -39,7 +39,7 @@ lazy submatches => sub {
     next unless defined $values[$idx];
     my ($name, $rule) = @{$subrules[$idx]};
     $submatches{$name} = Babble::SubMatch->new(
-      top_rule => $rule,
+      top_rule => [ $rule ],
       start => $-[$idx+1],
       text => $values[$idx],
       parent => $self,
