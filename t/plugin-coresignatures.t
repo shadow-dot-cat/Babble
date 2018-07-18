@@ -4,7 +4,7 @@ use Babble::Plugin::CoreSignatures;
 use Babble::Match;
 
 my $code = <<'END';
-  sub left :Attr ($sig) {
+  sub left :Attr ($sig, $extra = 2) {
     my $anon_right = sub ($sig) :Attr { }
   }
   sub right ($sig) :Attr :prototype($) {
@@ -14,7 +14,7 @@ END
 
 my %expect = (
   signatures => <<'END',
-  sub left :Attr ($sig) {
+  sub left :Attr ($sig, $extra = 2) {
     my $anon_right = sub :Attr ($sig) { }
   }
   sub right :Attr :prototype($) ($sig) {
@@ -22,7 +22,7 @@ my %expect = (
   }
 END
   oldsignatures => <<'END',
-  sub left ($sig) :Attr {
+  sub left ($sig, $extra = 2) :Attr {
     my $anon_right = sub ($sig) :Attr { }
   }
   sub right ($sig) :Attr :prototype($) {
@@ -30,11 +30,11 @@ END
   }
 END
   plain => <<'END',
-  sub left :Attr { my ($sig) = @_; 
-    my $anon_right = sub :Attr { my ($sig) = @_;  }
+  sub left :Attr { my ($sig, $extra) = @_; $extra = 2 if @_ <= 1;
+    my $anon_right = sub :Attr { my ($sig) = @_; }
   }
-  sub right ($) :Attr { my ($sig) = @_; 
-    my $anon_left = sub :Attr { my ($sig) = @_;  }
+  sub right ($) :Attr { my ($sig) = @_;
+    my $anon_left = sub :Attr { my ($sig) = @_; }
   }
 END
 );

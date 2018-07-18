@@ -73,20 +73,21 @@ sub transform_to_plain {
 
     s/\A\s*\(//, s/\)\s*\Z// for my $sig_orig = $s->{sig}->text;
     my @sig_parts = grep defined($_),
-                      $sig_orig =~ /((?>(?&PerlExpression))) ${grammar}/xg;
+                      $sig_orig =~ /((?&PerlAssignment)) ${grammar}/xg;
 
     my (@sig_text, @defaults);
 
     foreach my $idx (0..$#sig_parts) {
       my $part = $sig_parts[$idx];
       if ($part =~ s/^(\S+?)\s*=\s*(.*?)(,$|$)/$1$3/) {
-        push @defaults, "$1 = $2 if \@_ <= $idx";
+        push @defaults, "$1 = $2 if \@_ <= $idx;";
       }
       push @sig_text, $part;
     }
 
-    my $sig_text = join ' ', @sig_text;
-    $s->{body}->transform_text(sub { s/^{/{ my (${sig_text}) = \@_; / });
+    my $sig_text = 'my ('.(join ', ', @sig_text).') = @_;';
+    my $code = join ' ', $sig_text, @defaults;
+    $s->{body}->transform_text(sub { s/^{/{ ${code}/ });
     if ($proto) {
       $s->{sig}->transform_text(sub {
         s/\A(\s*)\(.*\)(\s*)\Z/${1}${proto}${2}/;
