@@ -38,9 +38,17 @@ sub transform_to_plain {
   my ($self, $top) = @_;
   my $tf = sub {
     my $s = (my $m = shift)->submatches;
+
+    # shift attributes after first before we go hunting for :prototype
+    if ((my $before = $s->{before}->text) =~ /\S/) {
+      $s->{before}->replace_text('');
+      $s->{after}->replace_text($before.$s->{after}->text);
+    }
+
     my $proto = '';
     my $grammar = $m->grammar_regexp;
-    foreach my $try (@{$s}{qw(before after)}) {
+    {
+      my $try = $s->{after};
       local $try->{grammar_regexp} = qr{
         (?(DEFINE)
           (?<PerlAttributes>(?<PerlStdAttributes>
