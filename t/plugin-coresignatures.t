@@ -51,13 +51,19 @@ foreach my $type (qw(signatures oldsignatures plain)) {
 my @cand = (
   [ 'sub foo :prototype($) ($sig) { }',
     'sub foo ($) { my ($sig) = @_; }', ],
+  [ 'sub foo :Foo :prototype($) ($sig) { }',
+    'sub foo ($) :Foo { my ($sig) = @_; }', ],
+  [ 'sub foo : Foo prototype($) ($sig) { }',
+    'sub foo ($) : Foo { my ($sig) = @_; }', ],
+  [ 'sub foo :prototype($) Foo ($sig) { }',
+    'sub foo ($) :Foo { my ($sig) = @_; }', ],
 );
 
 foreach my $cand (@cand) {
   my ($from, $to) = @$cand;
   my $top = Babble::Match->new(top_rule => 'Document', text => $from);
   $cs->transform_to_plain($top);
-  is($top->text, $to, "OK: ${from}");
+  is($top->text, $to, "${from}");
 }
 
 done_testing;
