@@ -48,4 +48,16 @@ foreach my $type (qw(signatures oldsignatures plain)) {
   is($top->text, $expect{$type}, "Rendered ${type} correctly");
 }
 
+my @cand = (
+  [ 'sub foo :prototype($) ($sig) { }',
+    'sub foo ($) { my ($sig) = @_; }', ],
+);
+
+foreach my $cand (@cand) {
+  my ($from, $to) = @$cand;
+  my $top = Babble::Match->new(top_rule => 'Document', text => $from);
+  $cs->transform_to_plain($top);
+  is($top->text, $to, "OK: ${from}");
+}
+
 done_testing;

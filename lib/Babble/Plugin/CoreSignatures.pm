@@ -49,16 +49,17 @@ sub transform_to_plain {
     my $grammar = $m->grammar_regexp;
     {
       my $try = $s->{after};
+      local $try->{top_rule} = 'Attributes';
       local $try->{grammar_regexp} = qr{
         (?(DEFINE)
           (?<PerlAttributes>(?<PerlStdAttributes>
-            (?=:)(?&PerlAttribute)
+            (?=(?&PerlOWS):)(?&PerlAttribute)
             (?&PerlAttribute)*
           ))
           (?<PerlAttribute>(?<PerlStdAttribute>
             (?&PerlOWS) :? (?&PerlOWS)
             (?&PerlIdentifier)
-            (?: (?= \( ) (?&PPR_X_quotelike_body) )?
+            (?: (?= \( ) (?&PPR_X_quotelike_body) )?+
           ))
         )
         ${grammar}
@@ -70,7 +71,7 @@ sub transform_to_plain {
           $attr->replace_text('');
           $each = sub {
             my ($attr) = @_;
-            $attr->replace_text(s/^(\s*)/$1:/) unless $attr->text =~ /^\s*:/;
+            $attr->transform_text(sub { s/^(\s*)/${1}:/ }) unless $attr->text =~ /^\s*:/;
             $each = sub {};
           };
         }
