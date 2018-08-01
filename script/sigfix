@@ -1,0 +1,5 @@
+#!perl
+
+use App::sigfix;
+
+App::sigfix::main();
