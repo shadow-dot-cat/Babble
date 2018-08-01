@@ -1,0 +1,1 @@
+^(?!lib/.*\.pm$|t/.*\.t$|t/lib/.*\.pm$|xt/.*\.t$|xt/lib/.*\.pm$|(?^:[^/]*\.PL)$|(?^:Changes|MANIFEST|README|META\.yml|META\.json)$|script/(?^:[^.].*)$)
