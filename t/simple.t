@@ -1,5 +1,4 @@
-use strict;
-use warnings;
+use strictures 2;
 use Test::More;
 use Babble::Match;
 
