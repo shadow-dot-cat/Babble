@@ -14,6 +14,28 @@ sub stripspace {
 }
 
 sub usage {
+  print <<'USAGE';
+sigfix [OPTIONS] [FILES]
+
+  sigfix -t signatures perl526file >perl528file
+  sigfix -t oldsignatures perl528file >perl526file
+  sigfix -t plain perlfile >perl58file
+
+  sigfix -i -t signatures upgradethisfile
+
+  sigfix -t signatures --pmc lib/My/Module.pm >lib/My/Module.pmc
+  sigfix -i -t signatures --pmc lib/My/Module.pm
+
+  sigfix -i --pmc eval $(find lib -name '*.pm') # multi-target fat pmc
+
+Options:
+
+  -t, --target     Target: 'signatures', 'oldsignatures', 'plain'
+  -i, --inplace    Modify target file(s) in place
+  --pmc            Generate .pmc (without -t, triple target pmc)
+  -h               This usage message
+USAGE
+
   exit(255);
 }
 
@@ -173,3 +195,33 @@ sub main {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+App::sigfix - transform files between signature syntax versions
+
+=head1 USAGE
+
+    sigfix [OPTIONS] [FILES]
+    
+      sigfix -t signatures perl526file >perl528file
+      sigfix -t oldsignatures perl528file >perl526file
+      sigfix -t plain perlfile >perl58file
+    
+      sigfix -i -t signatures upgradethisfile
+    
+      sigfix -t signatures --pmc lib/My/Module.pm >lib/My/Module.pmc
+      sigfix -i -t signatures --pmc lib/My/Module.pm
+    
+      sigfix -i --pmc eval $(find lib -name '*.pm') # multi-target fat pmc
+    
+    Options:
+    
+      -t, --target     Target: 'signatures', 'oldsignatures', 'plain'
+      -i, --inplace    Modify target file(s) in place
+      --pmc            Generate .pmc (without -t, triple target pmc)
+      -h               This usage message
+
+=cut
