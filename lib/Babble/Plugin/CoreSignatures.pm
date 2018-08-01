@@ -1,5 +1,6 @@
 package Babble::Plugin::CoreSignatures;
 
+use strictures 2;
 use Moo;
 
 sub extend_grammar { } # PPR::X can already parse everything we need
