@@ -37,6 +37,22 @@ sub transform_to_oldsignatures {
 
 sub transform_to_plain {
   my ($self, $top) = @_;
+  $top->each_match_within(
+    UseStatement =>
+    [ 'use\s+experimental\s+', [ explist => '.*?' ], ';' ],
+    sub {
+      my ($m) = @_;
+      my $explist = $m->submatches->{explist};
+      return unless my @explist_names = eval $explist->text;
+      my @remain = grep $_ ne 'signatures', @explist_names;
+      return unless @remain < @explist_names;
+      unless (@remain) {
+        $m->replace_text('');
+        return;
+      }
+      $explist->replace_text('qw('.join(' ', @remain).')');
+    }
+  );
   my $tf = sub {
     my $s = (my $m = shift)->submatches;
 

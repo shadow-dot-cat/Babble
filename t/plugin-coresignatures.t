@@ -4,6 +4,7 @@ use Babble::Plugin::CoreSignatures;
 use Babble::Match;
 
 my $code = <<'END';
+  use experimental 'signatures', 'postderef';
   sub left :Attr ($sig, $extra = 2) {
     my $anon_right = sub ($sig) :Attr { }
   }
@@ -14,6 +15,7 @@ END
 
 my %expect = (
   signatures => <<'END',
+  use experimental 'signatures', 'postderef';
   sub left :Attr ($sig, $extra = 2) {
     my $anon_right = sub :Attr ($sig) { }
   }
@@ -22,6 +24,7 @@ my %expect = (
   }
 END
   oldsignatures => <<'END',
+  use experimental 'signatures', 'postderef';
   sub left ($sig, $extra = 2) :Attr {
     my $anon_right = sub ($sig) :Attr { }
   }
@@ -30,6 +33,7 @@ END
   }
 END
   plain => <<'END',
+  use experimental qw(postderef);
   sub left :Attr { my ($sig, $extra) = @_; $extra = 2 if @_ <= 1;
     my $anon_right = sub :Attr { my ($sig) = @_; }
   }
