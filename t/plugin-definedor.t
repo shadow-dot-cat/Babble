@@ -10,6 +10,8 @@ my @cand = (
     'my $x = (map +(defined($_) ? $_ : $z), $y)[0];', ],
   [ 'my $x = ($y //= $z);',
     'my $x = ((map +(defined($_) ? $_ : $_ = $z), $y)[0]);', ],
+  [ 'my $x; my $y = 3; $x //= $y; say $x;',
+    'my $x; my $y = 3; defined($_) or $_ = $y for $x; say $x;', ]
 );
 
 foreach my $cand (@cand) {
