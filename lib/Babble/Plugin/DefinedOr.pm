@@ -8,13 +8,22 @@ sub transform_to_plain {
     [ before => '(?>(?&PerlPrefixPostfixTerm))' ],
     [ op => '(?>(?&PerlOWS) //=)' ], '(?>(?&PerlOWS))',
     [ after => '(?>(?&PerlPrefixPostfixTerm))' ],
-    [ trail => '(?> ; | (?= \} | \z ))' ],
+    '(?>(?&PerlOWS))',
+    [ trail => '
+        (?&PerlStatementModifier)?+
+        (?>(?&PerlOWS))
+        (?> ; | (?= \} | \z ))
+      ' ],
   ] => sub {
     my ($m) = @_;
     my ($before, $after, $trail)
       = map $_->text, @{$m->submatches}{qw(before after trail)};
     s/^\s+//, s/\s+$// for ($before, $after);
-    $m->replace_text('defined($_) or $_ = '.$after.' for '.$before.$trail);
+    my $assign = 'defined($_) or $_ = '.$after.' for '.$before;
+    if (length($trail) > 1) {
+      $assign = 'do { '.$assign.' } '
+    }
+    $m->replace_text($assign.$trail);
   });
   my $tf = sub {
     my ($m) = @_;
