@@ -7,7 +7,9 @@ my $do = Babble::Plugin::DefinedOr->new;
 
 my @cand = (
   [ 'my $x = $y // $z;',
-    'my $x = (map +(defined($_) ? $_ : $z), $y)[0];', ]
+    'my $x = (map +(defined($_) ? $_ : $z), $y)[0];', ],
+  [ 'my $x = ($y //= $z);',
+    'my $x = ((map +(defined($_) ? $_ : $_ = $z), $y)[0]);', ],
 );
 
 foreach my $cand (@cand) {
