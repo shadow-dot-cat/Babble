@@ -76,29 +76,3 @@ sub transform_to_plain {
 }
 
 1;
-
-__END__
-    (?<PerlScalarAccess>   (?<PerlStdScalarAccess>
-        (?>(?&PerlVariableScalar))
-        (?:
-            (?>(?&PerlOWS))
-            (?:
-                (?:
-                    (?>(?&PerlOWS))      -> (?>(?&PerlOWS))
-                    (?&PerlParenthesesList)
-                |
-                    (?>(?&PerlOWS))  (?: ->    (?&PerlOWS)  )?+
-                    (?> \$\* | (?&PerlArrayIndexer) | (?&PerlHashIndexer) )
-                )
-                (?:
-                    (?>(?&PerlOWS))  (?: ->    (?&PerlOWS)  )?+
-                    (?> \$\* | (?&PerlArrayIndexer) | (?&PerlHashIndexer) | (?&PerlParenthesesList) )
-                )*+
-            )?+
-            (?:
-                (?>(?&PerlOWS)) -> (?>(?&PerlOWS))
-                [\@%]
-                (?> \* | (?&PerlArrayIndexer) | (?&PerlHashIndexer) )
-            )?+
-        )?+
-    )) # End of rule
