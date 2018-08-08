@@ -10,6 +10,8 @@ my @cand = (
     'my $x = (map $$_, $foo)[0]; my @y = (map @{$_}, $bar->baz);' ],
   [ 'my $x = ($foo->bar->$*)->baz->@*;',
     'my $x = (map @{$_}, ((map $$_, $foo->bar)[0])->baz);' ],
+  [ 'my @val = $foo->@{qw(key names)};',
+    'my @val = (map @{$_}{qw(key names)}, $foo);' ],
 );
 
 foreach my $cand (@cand) {

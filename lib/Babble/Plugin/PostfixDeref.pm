@@ -2,6 +2,30 @@ package Babble::Plugin::PostfixDeref;
 
 use Moo;
 
+my $scalar_post = q{
+  (?:
+    (?>(?&PerlOWS))
+    (?:
+      (?:
+        (?>(?&PerlOWS))      -> (?>(?&PerlOWS))
+        (?&PerlParenthesesList)
+      |
+        (?>(?&PerlOWS))  (?: ->    (?&PerlOWS)  )?+
+        (?> \$\* | (?&PerlArrayIndexer) | (?&PerlHashIndexer) )
+      )
+      (?:
+        (?>(?&PerlOWS))  (?: ->    (?&PerlOWS)  )?+
+                   (?> \$\* | (?&PerlArrayIndexer) | (?&PerlHashIndexer) | (?&PerlParenthesesList) )
+      )*+
+    )?+
+    (?:
+      (?>(?&PerlOWS)) -> (?>(?&PerlOWS))
+      [\@%]
+      (?> \* | (?&PerlArrayIndexer) | (?&PerlHashIndexer) )
+    )?+
+  )
+};
+
 sub transform_to_plain {
   my ($self, $top) = @_;
   # TODO: cry about lvalues assignment to postfix derefs
@@ -47,7 +71,7 @@ sub transform_to_plain {
   ] => $tf);
   $top->each_match_within(ScalarAccess => [
     [ term => '(?>(?&PerlVariableScalar))' ],
-    [ postfix => '(?&PerlTermPostfixDereference)' ],
+    [ postfix => $scalar_post ],
   ] => $tf);
 }
 
