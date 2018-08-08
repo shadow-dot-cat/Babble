@@ -48,6 +48,11 @@ lazy submatches => sub {
   return \%submatches;
 };
 
+sub subtexts {
+  my ($self, @names) = @_;
+  map $_->text, @{$self->submatches}{@names};
+}
+
 sub _rule_to_re {
   my $re = $_[1];
   return "(?&Perl${re})" unless ref($re);

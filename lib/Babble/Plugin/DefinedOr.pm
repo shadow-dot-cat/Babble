@@ -16,8 +16,7 @@ sub transform_to_plain {
       ' ],
   ] => sub {
     my ($m) = @_;
-    my ($before, $after, $trail)
-      = map $_->text, @{$m->submatches}{qw(before after trail)};
+    my ($before, $after, $trail) = $m->subtexts(qw(before after trail));
     s/^\s+//, s/\s+$// for ($before, $after);
     my $assign = 'defined($_) or $_ = '.$after.' for '.$before;
     if (length($trail) > 1) {
@@ -27,7 +26,7 @@ sub transform_to_plain {
   });
   my $tf = sub {
     my ($m) = @_;
-    my ($before, $after) = map $_->text, @{$m->submatches}{qw(before after)};
+    my ($before, $after) = $m->subtexts(qw(before after));
     s/^\s+//, s/\s+$// for ($before, $after);
     if ($m->submatches->{op}->text =~ /=$/) {
       $after = '$_ = '.$after;
