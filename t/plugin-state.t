@@ -10,6 +10,8 @@ my @cand = (
     'my $foo = do { my $y; sub { my ($x) = @_; do { no warnings qw(void); $y }; return 3; } };' ],
   [ 'my $foo = sub { my ($x) = @_; state Foo ($y, $z) :Meh; return 3; };',
     'my $foo = do { my Foo ($y, $z) :Meh; sub { my ($x) = @_; do { no warnings qw(void); ($y, $z) }; return 3; } };' ],
+  [ 'my $foo = sub { state $x = 3 };',
+    'my $foo = do { my ($__B_001); my $x; sub { ($__B_001 ? $x : ++$__B_001 and $x = 3) } };' ],
 );
 
 foreach my $cand (@cand) {

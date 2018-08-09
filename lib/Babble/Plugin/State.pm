@@ -7,28 +7,41 @@ sub transform_to_plain {
   $top->each_match_of(AnonymousSubroutine => sub {
     my ($m) = @_;
     my @states;
+    my @gensym;
     $m->each_match_within(Assignment => [
       'state \b (?>(?&PerlOWS))',
       [ type => '(?: (?&PerlQualifiedIdentifier) (?&PerlOWS) )?+' ],
       [ declares => '(?>(?&PerlLvalue))' ],
       '(?>(?&PerlOWS))',
       [ attributes => '(?&PerlAttributes)?+' ],
-      '(?: (?>(?&PerlOWS)) = (?>&PerlOWS)',
+      '(?: (?>(?&PerlOWS)) = (?>(?&PerlOWS))',
         [ assigns => '(?&PerlConditionalExpression)' ],
       ')*+',
     ] => sub {
       my ($m) = @_;
       my $st = $m->subtexts;
       push @states, $st;
+      if (my $assigns = $st->{assigns}) {
+        my $genlex = '$'.$m->gensym;
+        my $text = '('
+          .$genlex
+          .' ? '.$st->{declares}
+          .' : ++'.$genlex.' and '.$st->{declares}.' = '.$assigns
+          .')';
+        push @gensym, $genlex;
+        $m->replace_text($text);
+        return;
+      }
       $m->replace_text('do { no warnings qw(void); '.$st->{declares}.' }');
     });
     if (@states) {
       my $state_statements = join ' ',
-         map {
+         (@gensym ? 'my ('.join(', ', @gensym).');' : ()),
+         (map {
            'my '.$_->{type}.$_->{declares}
            .($_->{attributes} ? ' '.$_->{attributes} : '')
            .';'
-         } @states;
+         } @states);
       $m->transform_text(sub {
         s/\A/do { ${state_statements} /;
         s/\Z/ }/;

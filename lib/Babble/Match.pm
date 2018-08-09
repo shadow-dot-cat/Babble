@@ -1,12 +1,18 @@
 package Babble::Match;
 
 use PPR::X;
+use Babble::SymbolGenerator;
 use Mu;
 use re 'eval';
 
 ro 'top_rule';
 rwp 'text';
 lazy 'grammar_regexp' => sub { $PPR::X::GRAMMAR };
+lazy 'symbol_generator' => sub {
+  $_[0]->can('parent')
+    ? $_[0]->parent->symbol_generator
+    : Babble::SymbolGenerator->new
+  } => handles => [ 'gensym' ];
 
 lazy top_re => sub {
   my ($self) = @_;
