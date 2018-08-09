@@ -53,13 +53,3 @@ sub transform_to_plain {
 }
 
 1;
-
-__END__
-
-
-    (?<PerlVariableDeclaration>   (?<PerlStdVariableDeclaration>
-        (?> my | state | our ) \b           (?>(?&PerlOWS))
-        (?: (?&PerlQualifiedIdentifier)        (?&PerlOWS)  )?+
-        (?>(?&PerlLvalue))                  (?>(?&PerlOWS))
-        (?&PerlAttributes)?+
-    )) # End of rule
