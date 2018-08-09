@@ -50,6 +50,10 @@ lazy submatches => sub {
 
 sub subtexts {
   my ($self, @names) = @_;
+  unless (@names) {
+    my %s = %{$self->submatches};
+    return +{ map +( $_ => $s{$_}->text ), keys %s };
+  }
   map $_->text, @{$self->submatches}{@names};
 }
 
@@ -87,7 +91,7 @@ sub each_match_of {
   while (my $f = shift @found) {
     my $match = substr($self->text, $f->[0], $f->[1]);
     my $obj = Babble::SubMatch->new(
-                top_rule => $self->_rule_to_re($of),
+                top_rule => $of,
                 start => $f->[0],
                 text => $match,
                 parent => $self,
