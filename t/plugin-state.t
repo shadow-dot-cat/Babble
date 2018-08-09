@@ -14,6 +14,12 @@ my @cand = (
     'my $foo = do { my ($__B_001); my $x; sub { ($__B_001 ? $x : ++$__B_001 and $x = 3) } };' ],
 );
 
+push @cand, map {
+  (my $orig = $_->[0]) =~ s/^my \$foo = sub/sub foo/;
+  s/^my \$foo = do //, s/sub {/sub foo {/ for (my $expect = $_->[1]);
+  [ $orig, $expect ],
+} @cand;
+
 foreach my $cand (@cand) {
   my ($from, $to) = @$cand;
   my $top = Babble::Match->new(top_rule => 'Document', text => $from);

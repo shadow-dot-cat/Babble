@@ -4,7 +4,7 @@ use Moo;
 
 sub transform_to_plain {
   my ($self, $top) = @_;
-  $top->each_match_of(AnonymousSubroutine => sub {
+  my $make_tf = sub { my ($lead) = @_; sub {
     my ($m) = @_;
     my @states;
     my @gensym;
@@ -43,11 +43,13 @@ sub transform_to_plain {
            .';'
          } @states);
       $m->transform_text(sub {
-        s/\A/do { ${state_statements} /;
+        s/\A/${lead}{ ${state_statements} /;
         s/\Z/ }/;
       });
     }
-  });
+  } };
+  $top->each_match_of(AnonymousSubroutine => $make_tf->('do '));
+  $top->each_match_of(SubroutineDeclaration => $make_tf->(''));
 }
 
 1;
