@@ -1,13 +1,16 @@
 package Babble::Match;
 
-use PPR::X;
+use Babble::Grammar;
 use Babble::SymbolGenerator;
 use Mu;
 use re 'eval';
 
 ro 'top_rule';
 rwp 'text';
-lazy 'grammar_regexp' => sub { $PPR::X::GRAMMAR };
+
+lazy 'grammar' => sub { Babble::Grammar->new }
+  => handles => [ 'grammar_regexp' ];
+
 lazy 'symbol_generator' => sub {
   $_[0]->can('parent')
     ? $_[0]->parent->symbol_generator
@@ -77,9 +80,9 @@ sub is_valid {
 sub match_positions_of {
   my ($self, $of) = @_;
   our @F;
-  my $wrapped = qr{(?(DEFINE)
-    (?<Perl${of}>((?&PerlStd${of}))(?{ push @F, [ pos() - length($^N), length($^N) ] }))
-  ) ${\$self->grammar_regexp}}x;
+  my $wrapped = $self->grammar->clone->extend_rule(
+                  $of => sub { '('.$_[0].')'.'(?{ push @Babble::Match::F, [ pos() - length($^N), length($^N) ] })' }
+                )->grammar_regexp;
   my @found = do {
     local @F;
     local $_ = $self->text;
@@ -119,13 +122,11 @@ sub each_match_of {
 sub each_match_within {
   my ($self, $within, $rule, $call) = @_;
   my $match_re = $self->_rule_to_re($rule);
-  my $extend_grammar = qq{
-    (?(DEFINE)
-      (?<PerlBabbleInnerMatch>(?<PerlStdBabbleInnerMatch> ${match_re}))
-      (?<Perl${within}> (?&PerlBabbleInnerMatch) | (?&PerlStd${within}))
-    )
-  };
-  local $self->{grammar_regexp} = join "\n", $extend_grammar, $self->grammar_regexp;
+  my $extend_grammar = $self->grammar->clone;
+  $extend_grammar->add_rule(
+    BabbleInnerMatch => $match_re,
+  )->augment_rule($within => '(?&PerlBabbleInnerMatch)');
+  local $self->{grammar} = $extend_grammar;
   $self->each_match_of(BabbleInnerMatch => sub {
     $_[0]->{top_rule} = $rule; # intentionally hacky, should go away (or rwp) later
     $call->($_[0]);

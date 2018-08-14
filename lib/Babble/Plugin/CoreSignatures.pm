@@ -63,24 +63,19 @@ sub transform_to_plain {
     }
 
     my $proto = '';
-    my $grammar = $m->grammar_regexp;
     {
       my $try = $s->{after};
       local $try->{top_rule} = 'Attributes';
-      local $try->{grammar_regexp} = qr{
-        (?(DEFINE)
-          (?<PerlAttributes>(?<PerlStdAttributes>
-            (?=(?&PerlOWS):)(?&PerlAttribute)
-            (?&PerlAttribute)*
-          ))
-          (?<PerlAttribute>(?<PerlStdAttribute>
-            (?&PerlOWS) :? (?&PerlOWS)
-            (?&PerlIdentifier)
-            (?: (?= \( ) (?&PPR_X_quotelike_body) )?+
-          ))
-        )
-        ${grammar}
-      }x;
+      my $grammar = $m->grammar->clone;
+      $grammar->add_rule(Attribute =>
+        '(?&PerlOWS) :? (?&PerlOWS)
+         (?&PerlIdentifier)
+         (?: (?= \( ) (?&PPR_X_quotelike_body) )?+'
+      )->replace_rule(Attributes => 
+        '(?=(?&PerlOWS):)(?&PerlAttribute)
+         (?&PerlAttribute)*'
+      );
+      local $try->{grammar} = $grammar;
       my $each; $each = sub {
         my ($attr) = @_;
         if ($attr->text =~ /prototype(\(.*?\))/) {
@@ -98,8 +93,9 @@ sub transform_to_plain {
     }
 
     s/\A\s*\(//, s/\)\s*\Z// for my $sig_orig = $s->{sig}->text;
+    my $grammar_re = $m->grammar_regexp;
     my @sig_parts = grep defined($_),
-                      $sig_orig =~ /((?&PerlAssignment)) ${grammar}/xg;
+                      $sig_orig =~ /((?&PerlAssignment)) ${grammar_re}/xg;
 
     my (@sig_text, @defaults);
 
