@@ -63,7 +63,7 @@ sub subtexts {
     my %s = %{$self->submatches};
     return +{ map +( $_ => $s{$_}->text ), keys %s };
   }
-  map $_->text, @{$self->submatches}{@names};
+  map +($_ ? $_->text : undef), @{$self->submatches}{@names};
 }
 
 sub _rule_to_re {
@@ -140,6 +140,7 @@ sub replace_substring {
   substr($text, $start, $length, $replace);
   $self->_set_text($text);
   foreach my $submatch (values %{$self->submatches}) {
+    next unless defined $submatch;
     if ($submatch->start > $start) {
       $submatch->{start} += length($replace) - $length;
     }
