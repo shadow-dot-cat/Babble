@@ -13,6 +13,7 @@ sub extend_grammar {
 
 sub transform_to_plain {
   my ($self, $top) = @_;
+  $top->remove_use_statement('Syntax::Keyword::Try');
   $top->each_match_within(TryCatch => [
     'try(?&PerlOWS)', [ try_block => '(?&PerlBlock)' ],
     '(?:(?&PerlOWS)catch(?&PerlOWS)', [ catch_block => '(?&PerlBlock)' ], ')?+'

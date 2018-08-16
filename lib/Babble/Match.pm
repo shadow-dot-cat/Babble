@@ -168,4 +168,13 @@ sub remove_use_argument {
   );
 }
 
+sub remove_use_statement {
+  my ($self, $use) = @_;
+  $self->each_match_within(
+    UseStatement =>
+    [ "use\\s+${use}.*?;" ],
+    sub { shift->replace_text('') },
+  );
+}
+
 1;
