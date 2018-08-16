@@ -148,4 +148,24 @@ sub replace_substring {
   return $self;
 }
 
+sub remove_use_argument {
+  my ($self, $use, $argument, $keep_empty) = @_;
+  $self->each_match_within(
+    UseStatement =>
+    [ "use\\s+${use}\\s+", [ explist => '.*?' ], ';' ],
+    sub {
+      my ($m) = @_;
+      my $explist = $m->submatches->{explist};
+      return unless my @explist_names = eval $explist->text;
+      my @remain = grep $_ ne $argument, @explist_names;
+      return unless @remain < @explist_names;
+      unless (@remain) {
+        ($keep_empty ? $explist : $m)->replace_text('');
+        return;
+      }
+      $explist->replace_text('qw('.join(' ', @remain).')');
+    }
+  );
+}
+
 1;
