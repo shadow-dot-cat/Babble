@@ -1,5 +1,8 @@
 Revision history for Babble
 
+0.090002
+          - Add missing Module::Runtime dep
+          - Remove spurious 'use Exporter ()'
 0.090001
           - Actually has a reasonable set of features now
 0.001001

@@ -3,7 +3,6 @@ package Babble::Filter;
 use Babble::PluginChain;
 use Filter::Util::Call;
 use strictures 2;
-use Exporter ();
 
 sub import {
   my ($class, @plugins) = @_;
