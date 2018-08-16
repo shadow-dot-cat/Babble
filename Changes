@@ -1,5 +1,7 @@
 Revision history for Babble
 
+0.090003
+          - Fix postderef to actually remove experimental lines
 0.090002
           - Add missing Module::Runtime dep
           - Remove spurious 'use Exporter ()'
