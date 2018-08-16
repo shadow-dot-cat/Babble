@@ -3,6 +3,7 @@ package Babble::Filter;
 use Babble::PluginChain;
 use Filter::Util::Call;
 use strictures 2;
+use Exporter ();
 
 sub import {
   my ($class, @plugins) = @_;
@@ -14,6 +15,9 @@ sub import {
     $_ = $pc->transform_document($_);
     return 1;
   });
+  if ($0 eq '-e') {
+    eval 'sub main::babble { $_ = $pc->transform_document($_) }'
+  }
 }
 
 1;
