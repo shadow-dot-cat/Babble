@@ -2,7 +2,7 @@ package Babble;
 
 use strictures 2;
 
-our $VERSION = '0.001001';
+our $VERSION = '0.090001';
 
 1;
 
@@ -14,15 +14,32 @@ __END__
 
 =head1 NAME
 
-Babble - Babel for perl, eventually, currently mostly App::sigfix
+Babble - EXPERIMENTAL Babel-like for perl
 
 =head1 VERSION
 
-0.001001
+0.009001
 
-=head1 DESCRIPTION
+=head1 SYNOPSIS
 
-Just go look at L<App::sigfix> for the moment.
+If you're here for help dealing with changes in perl's signatures syntax,
+look at L<App::sigfix>.
+
+If you're here to try out Babble itself, you'll want to do
+
+  use Babble::Filter qw(::CorePluginName External::Plugin::Name);
+
+to have it rewrite your code on the fly, or
+
+  perl -MBabble::Filter=::CorePluginName,External::Plugin::Name  \
+    -0777 -pe babble lib/MyFile.pm >lib/MyFile.pmc
+
+to rewrite for shipping.
+
+Current core plugins are C<::CoreSignatures>, C<::State>, C<::DefinedOr>,
+C<::PostfixDeref>, C<::SubstituteAndReturn> (s//r), and C<::SKT> (which
+is a start on rewriting L<Syntax::Keyword::Try>). For an example of an
+external plugin, see L<Method::Signatures::PP>.
 
 =head1 AUTHOR
 
@@ -35,4 +52,4 @@ This software is copyright (c) 2018 by Matt S Trout (mst).
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
-
+=cut
