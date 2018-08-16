@@ -4,6 +4,7 @@ use Moo;
 
 sub transform_to_plain {
   my ($self, $top) = @_;
+  $top->remove_use_argument(feature => 'state');
   my $make_tf = sub { my ($lead) = @_; sub {
     my ($m) = @_;
     my @states;
