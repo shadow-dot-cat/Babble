@@ -28,7 +28,7 @@ my $scalar_post = q{
 
 sub transform_to_plain {
   my ($self, $top) = @_;
-  $top->remove_use_argument(experiment => 'postderef');
+  $top->remove_use_argument(experimental => 'postderef');
   $top->remove_use_argument(feature => 'postderef');
   # TODO: cry about lvalues assignment to postfix derefs
   my $tf = sub {
