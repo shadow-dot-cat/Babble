@@ -77,4 +77,14 @@ sub clone {
   );
 }
 
+sub match {
+  my ($self, $as, $text) = @_;
+  require Babble::Match;
+  Babble::Match->new(
+    top_rule => $as,
+    text => $text,
+    grammar => $self
+  );
+}
+
 1;

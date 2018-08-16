@@ -18,11 +18,7 @@ my @cand = (
 
 foreach my $cand (@cand) {
   my ($from, $to) = @$cand;
-  my $top = Babble::Match->new(
-    top_rule => 'Document',
-    text => $from,
-    grammar => $g,
-  );
+  my $top = $g->match(Document => $from);
   $skt->transform_to_plain($top);
   is($top->text, $to, "${from}");
 }
