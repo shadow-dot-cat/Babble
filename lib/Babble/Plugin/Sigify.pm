@@ -5,11 +5,7 @@ use Moo;
 
 sub transform_to_plain {
   my ($self, $top) = @_;
-  $top->each_match_within('SubroutineDeclaration' => [
-    'sub \b (?&PerlOWS) (?&PerlOldQualifiedIdentifier) (?&PerlOWS)',
-    '(?: (?>(?&PerlAttributes)) (?&PerlOWS) )?+',
-    [ body => '(?&PerlBlock)' ], '(?&PerlOWS)'
-  ] => sub {
+  my $tf = sub {
     my ($m) = @_;
     my $body = $m->submatches->{body}->text;
     $body =~ s/^\s+//;
@@ -18,7 +14,17 @@ sub transform_to_plain {
       $body =~ s/^{\n\n/{\n/;
       $m->submatches->{body}->replace_text($sig.' '.$body);
     }
-  });
+  };
+  $top->each_match_within('SubroutineDeclaration' => [
+    'sub \b (?&PerlOWS) (?&PerlOldQualifiedIdentifier) (?&PerlOWS)',
+    '(?: (?>(?&PerlAttributes)) (?&PerlOWS) )?+',
+    [ body => '(?&PerlBlock)' ], '(?&PerlOWS)'
+  ] => $tf);
+  $top->each_match_within('AnonymousSubroutine' => [
+    'sub \b (?&PerlOWS)',
+    '(?: (?>(?&PerlAttributes)) (?&PerlOWS) )?+',
+    [ body => '(?&PerlBlock)' ], '(?&PerlOWS)'
+  ] => $tf);
 }
 
 1;

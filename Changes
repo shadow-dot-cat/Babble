@@ -1,5 +1,6 @@
 Revision history for Babble
 
+          - Sigify anonymous as well as named subroutines
 0.090004
           - Add sigify plugin
 0.090003
