@@ -1,5 +1,6 @@
 Revision history for Babble
 
+0.090004
           - Add sigify plugin
 0.090003
           - Fix postderef to actually remove experimental lines
