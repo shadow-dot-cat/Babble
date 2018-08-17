@@ -45,6 +45,10 @@ Not for 'normal' use but still interesting, C<::Sigify> attempts to convert
 simple @_ unrolls into signatures - best used on its own, followed by
 applying L<App::sigfix> if you need the 5.22-5.26 oldsignatures style.
 
+=head1 REPOSITORY
+
+L<http://github.com/shadow-dot-cat/Babble/>
+
 =head1 AUTHOR
 
 Matt S Trout (mst) <mst@shadowcat.co.uk>
