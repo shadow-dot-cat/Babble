@@ -41,6 +41,10 @@ C<::PostfixDeref>, C<::SubstituteAndReturn> (s//r), and C<::SKT> (which
 is a start on rewriting L<Syntax::Keyword::Try>). For an example of an
 external plugin, see L<Method::Signatures::PP>.
 
+Not for 'normal' use but still interesting, C<::Sigify> attempts to convert
+simple @_ unrolls into signatures - best used on its own, followed by
+applying L<App::sigfix> if you need the 5.22-5.26 oldsignatures style.
+
 =head1 AUTHOR
 
 Matt S Trout (mst) <mst@shadowcat.co.uk>
