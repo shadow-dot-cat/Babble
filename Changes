@@ -1,5 +1,6 @@
 Revision history for Babble
 
+          - Escape unescaped { chars in regexps to avoid deprecation warnings
 0.090006
           - Work around regexp engine weirditude on 5.18+
 0.090005
