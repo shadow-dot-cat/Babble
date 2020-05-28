@@ -93,7 +93,10 @@ sub transform_to_plain {
       push @sig_text, $part;
     }
 
-    my $sig_text = 'my ('.(join ', ', @sig_text).') = @_;';
+    my $sig_text =
+      @sig_text
+      ? 'my ('.(join ', ', @sig_text).') = @_;'
+      : '';
     my $code = join ' ', $sig_text, @defaults;
     $s->{body}->transform_text(sub { s/^{/{ ${code}/ });
     if ($proto) {
