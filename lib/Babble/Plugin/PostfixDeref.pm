@@ -58,9 +58,12 @@ sub transform_to_plain {
       }
     }
     if ($postfix) {
-      my ($sigil, $rest) = ($postfix =~ /^\s*->\s*([\@%])(.*)$/);
-      $rest = '' if $rest eq '*';
-      $term = '(map '.$sigil.'{$_}'.$rest.', '.$term.')';
+        if ( my ($sigil, $rest) = ($postfix =~ /^\s*->\s*([\@%])(.*)$/) ) {
+            $rest = '' if $rest eq '*';
+            $term = '(map '.$sigil.'{$_}'.$rest.', '.$term.')';
+        } else {
+            $term .= $postfix;
+        }
     }
     $m->submatches->{term}->replace_text($term);
     $m->submatches->{postfix}->replace_text('');
