@@ -8,8 +8,11 @@ use re 'eval';
 ro 'top_rule';
 rwp 'text';
 
-lazy 'grammar' => sub { Babble::Grammar->new }
-  => handles => [ 'grammar_regexp' ];
+lazy 'grammar' => sub {
+  $_[0]->can('parent')
+    ? $_[0]->parent->grammar
+    : Babble::Grammar->new
+  } => handles => [ 'grammar_regexp' ];
 
 lazy 'symbol_generator' => sub {
   $_[0]->can('parent')
