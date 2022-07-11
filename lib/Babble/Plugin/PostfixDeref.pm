@@ -59,37 +59,46 @@ my $term_derefable = q{
               )
 };
 
-my $scalar_post = q{
-  (?:
-    (?>(?&PerlOWS))
-    (?:
-      (?:
-        (?>(?&PerlOWS))      -> (?>(?&PerlOWS))
-        (?&PerlParenthesesList)
-      |
-        (?>(?&PerlOWS))  (?: ->    (?&PerlOWS)  )?+
-        (?> \$\* | (?&PerlArrayIndexer) | (?&PerlHashIndexer) )
-      )
-      (?:
-        (?>(?&PerlOWS))  (?: ->    (?&PerlOWS)  )?+
-                   (?> \$\* | (?&PerlArrayIndexer) | (?&PerlHashIndexer) | (?&PerlParenthesesList) )
-      )*+
-    )?+
-    (?:
-      (?>(?&PerlOWS)) -> (?>(?&PerlOWS))
-      [\@%]
-      (?> \* | (?&PerlArrayIndexer) | (?&PerlHashIndexer) )
-    )?+
-  )
+my $scalarnospace_post = q{
+            # Copied from <PerlScalarAccessNoSpace> rule in PPR::X@0.001002
+            # Then any nuber of arrowed accesses
+            # (this is an inlined subset of (?&PerlTermPostfixDereference))...
+            (?:
+                ->
+                (?>
+                    # A series of simple brackets can omit interstitial arrows...
+                    (?:  (?&PerlArrayIndexer)
+                    |    (?&PerlHashIndexer)
+                    )++
+
+                |   # An array or hash slice...
+                    \@ (?> (?>(?&PerlArrayIndexer)) | (?>(?&PerlHashIndexer)) )
+                )
+            )*+
+
+            # Followed by at most one of these terminal arrowed dereferences...
+            (?:
+                ->
+                (?>
+                    # An array or scalar deref...
+                    [\@\$] \*
+
+                |   # An array count deref...
+                    \$ \# \*
+                )
+            )?+
 };
 
 sub transform_to_plain {
   my ($self, $top) = @_;
-  $top->remove_use_argument(experimental => 'postderef');
-  $top->remove_use_argument(feature => 'postderef');
+  for my $argument (qw(postderef postderef_qq)) {
+    $top->remove_use_argument(experimental => $argument);
+    $top->remove_use_argument(feature => $argument);
+  }
   # TODO: cry about lvalues assignment to postfix derefs
   my $tf = sub {
-    my ($m) = @_;
+    my ($m, $in_quotelike) = @_;
+    my $interpolate = defined $in_quotelike && $in_quotelike;
     my ($term, $postfix) = $m->subtexts(qw(term postfix));
     #warn "Term: $term"; warn "Postfix: $postfix";
     my $grammar = $m->grammar_regexp;
@@ -110,6 +119,9 @@ sub transform_to_plain {
       my $stripped = $1;
       if ($stripped =~ /\$\*$/) {
         $term = '(map $$_, '.$term.')[0]';
+        if( $interpolate ) {
+          $term = "\@{[ $term ]}";
+        }
       } else {
         $term .= $stripped;
       }
@@ -118,6 +130,17 @@ sub transform_to_plain {
       my ($sigil, $rest) = ($postfix =~ /^\s*->\s*([\@%])(.*)$/);
       $rest = '' if $rest eq '*';
       $term = '(map '.$sigil.'{$_}'.$rest.', '.$term.')';
+      if( $interpolate ) {
+        # NOTE This can be interpolated safely
+        # because:
+        #   1. The delimiters are balanced so use inside of
+        #      `qq{ ... }` or `qq[ ... ]` is safe.
+        #   2. The contents of $term can only contain expressions that
+        #      have `$` and `@` sigils, so any expression contained in
+        #      $term which is used within `qq@ ... @` will not have the
+        #      `@` sigil (same with the `qq$ ... $` and `$` sigil).
+        $term = "\@{[ $term ]}";
+      }
     }
     $m->submatches->{term}->replace_text($term);
     $m->submatches->{postfix}->replace_text('');
@@ -126,6 +149,21 @@ sub transform_to_plain {
     [ term => "(?> $term_derefable )" ],
     [ postfix => '(?&PerlTermPostfixDereference)' ],
   ] => $tf);
+
+  # NOTE ScalarAccessNoSpace is used within the
+  # ScalarAccessNoSpaceNoArrow rule, but any such
+  # matches here via that rule would be invalid input
+  # to begin with.
+  $top->each_match_within(ScalarAccessNoSpace => [
+    [ term => q{
+            (?>(?&PerlVariableScalarNoSpace))
+
+            # Optional arrowless access(es) to begin...
+            (?: (?&PerlArrayIndexer) | (?&PerlHashIndexer) )*+
+      } ],
+    [ postfix => $scalarnospace_post ],
+  ] => sub { $tf->(shift, 1) });
+  # NOTE ArrayAccessNoSpace also needs to implemented.
 }
 
 1;

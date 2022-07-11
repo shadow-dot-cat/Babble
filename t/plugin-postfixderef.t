@@ -20,6 +20,23 @@ my @cand = (
     'my %val = (map %{$_}[@idx], $foo);' ],
   [ 'my %val = $foo->%{qw(key names)};',
     'my %val = (map %{$_}{qw(key names)}, $foo);' ],
+  [ 'qq{ $foo->@* }',
+    'qq{ @{[ (map @{$_}, $foo) ]} }' ],
+  [ 'qq{ $foo->@{qw(key names)} }',
+    'qq{ @{[ (map @{$_}{qw(key names)}, $foo) ]} }' ],
+
+  [ 'qq{ $foo }',
+    'qq{ $foo }' ],
+  [ 'qq{ $foo $bar }',
+    'qq{ $foo $bar }' ],
+
+  [ 'qq{ $foo->%* }',
+    'qq{ $foo->%* }' ],
+  [ 'qq{ $foo->%* $bar->@* }',
+    'qq{ $foo->%* @{[ (map @{$_}, $bar) ]} }' ],
+
+  [ 'qq{ $foo->$* }',
+    'qq{ @{[ (map $$_, $foo)[0] ]} }' ],
 );
 
 foreach my $cand (@cand) {
