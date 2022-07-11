@@ -16,6 +16,10 @@ my @cand = (
     'my $val = $foo[0];' ],
   [ 'my $val = $foo[$idx];',
     'my $val = $foo[$idx];' ],
+  [ 'my %val = $foo->%[@idx];',
+    'my %val = (map %{$_}[@idx], $foo);' ],
+  [ 'my %val = $foo->%{qw(key names)};',
+    'my %val = (map %{$_}{qw(key names)}, $foo);' ],
 );
 
 foreach my $cand (@cand) {
