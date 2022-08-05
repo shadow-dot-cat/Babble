@@ -126,10 +126,6 @@ sub transform_to_plain {
     [ term => "(?> $term_derefable )" ],
     [ postfix => '(?&PerlTermPostfixDereference)' ],
   ] => $tf);
-  $top->each_match_within(ScalarAccess => [
-    [ term => '(?>(?&PerlVariableScalar))' ],
-    [ postfix => $scalar_post ],
-  ] => $tf);
 }
 
 1;
