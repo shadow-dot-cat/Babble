@@ -105,20 +105,22 @@ sub transform_to_plain {
     my $strip_re = qr{
       ( (?>(?&PerlOWS)) -> (?>(?&PerlOWS))
         (?>
-           (?> (?&PerlQualifiedIdentifier) | (?&PerlVariableScalar) )
+             \$\#\*
+           | \$\*
+           | (?> (?&PerlQualifiedIdentifier) | (?&PerlVariableScalar) )
            (?: (?>(?&PerlOWS)) (?&PerlParenthesesList) )?+
            | (?&PerlParenthesesList)
            | (?&PerlArrayIndexer)
            | (?&PerlHashIndexer)
-           | \$\*
         )
       )
       ${grammar}
     }x;
     while ($postfix =~ s/^${strip_re}//) {
       my $stripped = $1;
-      if ($stripped =~ /\$\*$/) {
-        $term = '(map $$_, '.$term.')[0]';
+      if ($stripped =~ /(\$\#?)\*$/) {
+        my $sigil = $1;
+        $term = '(map '.$sigil.'$_, '.$term.')[0]';
         if( $interpolate ) {
           $term = "\@{[ $term ]}";
         }

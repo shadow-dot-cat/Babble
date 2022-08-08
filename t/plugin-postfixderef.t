@@ -37,6 +37,11 @@ my @cand = (
 
   [ 'qq{ $foo->$* }',
     'qq{ @{[ (map $$_, $foo)[0] ]} }' ],
+
+  [ '$foo->$#*',
+    '(map $#$_, $foo)[0]' ],
+  [ 'qq{ $foo->$#* }',
+    'qq{ @{[ (map $#$_, $foo)[0] ]} }' ],
 );
 
 foreach my $cand (@cand) {
