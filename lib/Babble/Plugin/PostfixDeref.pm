@@ -2,6 +2,63 @@ package Babble::Plugin::PostfixDeref;
 
 use Moo;
 
+my $term_derefable = q{
+            # Copied from <PerlTerm> rule in PPR::X@0.001002
+            # The remaining alternatives can all take postfix dereferencers...
+            # ...
+              (?:
+                    (?= \$ )  (?&PerlScalarAccess)
+              |
+                    (?= \@ )  (?&PerlArrayAccess)
+              |
+                    (?=  % )  (?&PerlHashAccess)
+              |
+                    (?&PerlAnonymousSubroutine)
+              |
+                    (?>(?&PerlNullaryBuiltinFunction))  (?! (?>(?&PerlOWS)) \( )
+              |
+                    (?&PerlDoBlock) | (?&PerlEvalBlock)
+              |
+                    (?&PerlCall)
+              |
+                    (?&PerlVariableDeclaration)
+              |
+                    (?&PerlTypeglob)
+              |
+                    (?>(?&PerlParenthesesList))
+
+                    # Can optionally do a [...] lookup straight after the parens,
+                    # followd by any number of other look-ups
+                    (?:
+                        (?>(?&PerlOWS)) (?&PerlArrayIndexer)
+                        (?:
+                            (?>(?&PerlOWS))
+                            (?>
+                                (?&PerlArrayIndexer)
+                            |   (?&PerlHashIndexer)
+                            |   (?&PerlParenthesesList)
+                            )
+                        )*+
+                    )?+
+              |
+                    (?&PerlAnonymousArray)
+              |
+                    (?&PerlAnonymousHash)
+              |
+                    (?&PerlDiamondOperator)
+              |
+                    (?&PerlContextualMatch)
+              |
+                    (?&PerlQuotelikeS)
+              |
+                    (?&PerlQuotelikeTR)
+              |
+                    (?&PerlQuotelikeQX)
+              |
+                    (?&PerlLiteral)
+              )
+};
+
 my $scalar_post = q{
   (?:
     (?>(?&PerlOWS))
@@ -65,15 +122,9 @@ sub transform_to_plain {
     $m->submatches->{term}->replace_text($term);
     $m->submatches->{postfix}->replace_text('');
   };
-  $top->each_match_within(PrefixPostfixTerm => [
-    '(?: (?>(?&PerlPrefixUnaryOperator))  (?&PerlOWS) )*+',
-    [ term => '(?>(?&PerlTerm))' ],
+  $top->each_match_within(Term => [
+    [ term => "(?> $term_derefable )" ],
     [ postfix => '(?&PerlTermPostfixDereference)' ],
-    '(?: (?>(?&PerlOWS)) (?&PerlPostfixUnaryOperator) )?+'
-  ] => $tf);
-  $top->each_match_within(ScalarAccess => [
-    [ term => '(?>(?&PerlVariableScalar))' ],
-    [ postfix => $scalar_post ],
   ] => $tf);
 }
 
