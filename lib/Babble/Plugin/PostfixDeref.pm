@@ -109,9 +109,10 @@ sub transform_to_plain {
            | \$\*
            | (?> (?&PerlQualifiedIdentifier) | (?&PerlVariableScalar) )
            (?: (?>(?&PerlOWS)) (?&PerlParenthesesList) )?+
-           | (?&PerlParenthesesList)
-           | (?&PerlArrayIndexer)
-           | (?&PerlHashIndexer)
+           | (?:
+                 (?>(?&PerlOWS))
+                 (?> (?&PerlParenthesesList) | (?&PerlArrayIndexer) | (?&PerlHashIndexer) )
+             )++
         )
       )
       ${grammar}
