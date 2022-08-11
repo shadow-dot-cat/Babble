@@ -39,9 +39,9 @@ sub transform_to_plain {
     [ after => '(?>(?&PerlPrefixPostfixTerm))' ],
   ] => $tf);
   $top->each_match_within(Assignment => [
-    [ before => '(?>(?&PerlPrefixPostfixTerm))' ],
+    [ before => '(?>(?&PerlConditionalExpression))' ],
     [ op => '(?>(?&PerlOWS) //=)' ], '(?>(?&PerlOWS))',
-    [ after => '(?>(?&PerlPrefixPostfixTerm))' ],
+    [ after => '(?>(?&PerlConditionalExpression))' ],
   ] => $tf);
 }
 
