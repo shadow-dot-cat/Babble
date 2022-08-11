@@ -7,11 +7,11 @@ my $pd = Babble::Plugin::PostfixDeref->new;
 
 my @cand = (
   [ 'my $x = $foo->$*; my @y = $bar->baz->@*;',
-    'my $x = (map $$_, $foo)[0]; my @y = (map @{$_}, $bar->baz);' ],
+    'my $x = ${$foo}; my @y = @{$bar->baz};' ],
   [ 'my $x = ($foo->bar->$*)->baz->@*;',
-    'my $x = (map @{$_}, ((map $$_, $foo->bar)[0])->baz);' ],
+    'my $x = @{(${$foo->bar})->baz};' ],
   [ 'my @val = $foo->@{qw(key names)};',
-    'my @val = (map @{$_}{qw(key names)}, $foo);' ],
+    'my @val = @{$foo}{qw(key names)};' ],
   [ 'my $val = $foo[0];',
     'my $val = $foo[0];' ],
   [ 'my $val = $foo[$idx];',
@@ -19,17 +19,17 @@ my @cand = (
   [ '$bar->{key0}{key1}',
     '$bar->{key0}{key1}' ],
   [ '$bar->{key0}{key1}->@*',
-    '(map @{$_}, $bar->{key0}{key1})' ],
+    '@{$bar->{key0}{key1}}' ],
   [ '$bar->{key0}{key1}->@[@idx]',
-    '(map @{$_}[@idx], $bar->{key0}{key1})' ],
+    '@{$bar->{key0}{key1}}[@idx]' ],
   [ 'my %val = $foo->%[@idx];',
-    'my %val = (map %{$_}[@idx], $foo);' ],
+    'my %val = %{$foo}[@idx];' ],
   [ 'my %val = $foo->%{qw(key names)};',
-    'my %val = (map %{$_}{qw(key names)}, $foo);' ],
+    'my %val = %{$foo}{qw(key names)};' ],
   [ 'qq{ $foo->@* }',
-    'qq{ @{[ (map @{$_}, $foo) ]} }' ],
+    'qq{ @{[ @{$foo} ]} }' ],
   [ 'qq{ $foo->@{qw(key names)} }',
-    'qq{ @{[ (map @{$_}{qw(key names)}, $foo) ]} }' ],
+    'qq{ @{[ @{$foo}{qw(key names)} ]} }' ],
 
   [ 'qq{ $foo }',
     'qq{ $foo }' ],
@@ -39,15 +39,15 @@ my @cand = (
   [ 'qq{ $foo->%* }',
     'qq{ $foo->%* }' ],
   [ 'qq{ $foo->%* $bar->@* }',
-    'qq{ $foo->%* @{[ (map @{$_}, $bar) ]} }' ],
+    'qq{ $foo->%* @{[ @{$bar} ]} }' ],
 
   [ 'qq{ $foo->$* }',
-    'qq{ @{[ (map $$_, $foo)[0] ]} }' ],
+    'qq{ @{[ ${$foo} ]} }' ],
 
   [ '$foo->$#*',
-    '(map $#$_, $foo)[0]' ],
+    '$#{$foo}' ],
   [ 'qq{ $foo->$#* }',
-    'qq{ @{[ (map $#$_, $foo)[0] ]} }' ],
+    'qq{ @{[ $#{$foo} ]} }' ],
 );
 
 foreach my $cand (@cand) {

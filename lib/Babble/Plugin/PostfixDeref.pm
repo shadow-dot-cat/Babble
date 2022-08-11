@@ -121,7 +121,7 @@ sub transform_to_plain {
       my $stripped = $1;
       if ($stripped =~ /(\$\#?)\*$/) {
         my $sigil = $1;
-        $term = '(map '.$sigil.'$_, '.$term.')[0]';
+        $term = $sigil.'{'.$term.'}';
         if( $interpolate ) {
           $term = "\@{[ $term ]}";
         }
@@ -132,7 +132,7 @@ sub transform_to_plain {
     if ($postfix) {
       my ($sigil, $rest) = ($postfix =~ /^\s*->\s*([\@%])(.*)$/);
       $rest = '' if $rest eq '*';
-      $term = '(map '.$sigil.'{$_}'.$rest.', '.$term.')';
+      $term = $sigil.'{'.$term.'}'.$rest;
       if( $interpolate ) {
         # NOTE This can be interpolated safely
         # because:
