@@ -2,7 +2,13 @@ package Babble::Plugin::SubstituteAndReturn;
 
 use Moo;
 
-my $FLAGS_RE = qr/([msixpodualgcern]*+)$/;
+my $s_FLAGS_RE = qr/([msixpodualgcern]*+)$/;
+my $y_FLAGS_RE = qr/([cdsr]*+)$/;
+
+sub _get_flags {
+  my ($text) = @_;
+  $text =~ /^s/ ? $s_FLAGS_RE : $y_FLAGS_RE;
+}
 
 sub _transform_binary {
   my ($self, $top) = @_;
@@ -12,7 +18,10 @@ sub _transform_binary {
     $top->each_match_within(BinaryExpression => [
        [ 'left' => '(?>(?&PerlPrefixPostfixTerm))' ],
        '(?>(?&PerlOWS)) =~ (?>(?&PerlOWS))',
-       [ 'right' => '(?>(?&PerlSubstitution))' ],
+       [ 'right' => '(?>
+                        (?&PerlSubstitution)
+                      | (?&PerlTransliteration)
+                     )' ],
     ] => sub {
       my ($m) = @_;
       my ($left, $right);
@@ -20,7 +29,7 @@ sub _transform_binary {
         ($left, $right) = $m->subtexts(qw(left right));
         1
       } or return;
-      my ($flags) = $right =~ $FLAGS_RE;
+      my ($flags) = $right =~ _get_flags($right);
       return unless (my $newflags = $flags) =~ s/r//g;
 
       # find chained substitutions
@@ -33,7 +42,10 @@ sub _transform_binary {
         \G
           (
             (?>(?&PerlOWS)) =~ (?>(?&PerlOWS))
-            ( (?>(?&PerlSubstitution)) )
+            ((?>
+                (?&PerlSubstitution)
+              | (?&PerlTransliteration)
+            ))
           )
           @{[ $m->grammar_regexp ]}
         /xg ) {
@@ -41,7 +53,7 @@ sub _transform_binary {
         push @chained_subs, $2;
       }
       for my $subst_c (@chained_subs) {
-        my ($f_c) = $subst_c =~ $FLAGS_RE;
+        my ($f_c) = $subst_c =~ _get_flags($subst_c);
         die "Chained substitution must use the /r modifier"
           unless (my $nf_c = $f_c) =~ s/r//g;
         $subst_c =~ s/\Q${f_c}\E$/${nf_c}/;
@@ -82,11 +94,14 @@ sub _transform_contextualise {
     # Look for substitution without binding operator:
     # First look for an expression that begins with Substitution.
     $top->each_match_within(Expression => [
-      [ subst => '(?> (?&PerlSubstitution) )' ],
+      [ subst => '(?>
+                      (?&PerlSubstitution)
+                    | (?&PerlTransliteration)
+                  )' ],
     ] => sub {
       my ($m) = @_;
       my ($subst) = @{$m->submatches}{qw(subst)};
-      my ($flags) = $subst->text =~ $FLAGS_RE;
+      my ($flags) = $subst->text =~ _get_flags($subst->text);
       return unless $flags =~ /r/;
       $subst_pos{$m->start} = 1;
     });
@@ -94,7 +109,10 @@ sub _transform_contextualise {
     $top->each_match_within(BinaryExpression => [
        [ 'left' => '(?>(?&PerlPrefixPostfixTerm))' ],
        '(?>(?&PerlOWS)) =~ (?>(?&PerlOWS))',
-       [ 'right' => '(?>(?&PerlSubstitution))' ],
+       [ 'right' => '(?>
+                         (?&PerlSubstitution)
+                       | (?&PerlTransliteration)
+                     )' ],
     ] => sub {
       my ($m) = @_;
       delete $subst_pos{ $m->start + $m->submatches->{right}->start };

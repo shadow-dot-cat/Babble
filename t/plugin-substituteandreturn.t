@@ -25,6 +25,20 @@ my @cand = (
        print( (map { (my $__B_002 = $_) =~ s/dd/4/g; for ($__B_002) { s/ee/5/g; s/ff/6/g } $__B_002 } $_)[0] );
      }',
     ],
+  [ 'my $foo = $bar =~ y/a-c/d/r;',
+    'my $foo = (map { (my $__B_001 = $_) =~ y/a-c/d/; $__B_001 } $bar)[0];', ],
+  [ q{
+      while(<>) {
+        print( y/a-c/d/r =~ tr/d/z/cr );
+        print( y/a-c/d/r =~ s/d/foo/gr );
+      }
+    }, q{
+      while(<>) {
+        print( (map { (my $__B_001 = $_) =~ y/a-c/d/; for ($__B_001) { tr/d/z/c } $__B_001 } $_)[0] );
+        print( (map { (my $__B_002 = $_) =~ y/a-c/d/; for ($__B_002) { s/d/foo/g } $__B_002 } $_)[0] );
+      }
+    }
+  ],
 );
 
 foreach my $cand (@cand) {
